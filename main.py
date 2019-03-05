@@ -4,7 +4,7 @@
 import configparser
 import random
 import time
-
+import binascii
 import sys
 import os
 sys.path.append(os.path.join(os.path.abspath('.'), 'env/lib/site-packages'))
@@ -175,13 +175,13 @@ def compute_status(chat_id):
 	poss_lifts_list = get_poss_lifts(chat_id)
 	num_poss_lifts = len(poss_lifts_list)
 	num_bikes = len(get_bike_list(chat_id))
-	rawseed = str.join(';',
+
+	seed_str = str.join(';',
 		['C:'] + sorted(get_names_list(cars_list)) +
 		['L:'] + sorted(get_names_list(lifts_list)) +
 		['P:'] + sorted(get_names_list(poss_lifts_list)))
-	seed = 5381
-	for c in rawseed:
-		seed = ((seed * 33) & 4294967295) ^ ord(c)
+	seed = binascii.crc32(seed_str +
+		str(min(cars_list, key = lambda t:t['timestamp'])))
 
 	available_seats = sum(
 		[(i + 1) * n for i, n in enumerate(num_cars_divided)])
@@ -303,11 +303,9 @@ def deleteprefs():
 def index():
 	return '.'
 
-
 ###############################
 #  TELEGRAM COMMAND HANDLERS  #
 ###############################
-
 def start(bot, update):
 	bot.send_message(chat_id=update.message.chat_id,
 					 text="I'm a bot, please talk to me!")
